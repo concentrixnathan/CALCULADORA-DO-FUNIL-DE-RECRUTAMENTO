@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora do Funil de Recrutamento</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a202c; }
+  header { background: #1a365d; color: white; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+  header .logo { background: #e53e3e; color: white; font-weight: 700; font-size: 18px; padding: 6px 14px; border-radius: 6px; }
+  header h1 { font-size: 20px; font-weight: 600; }
+  .container { max-width: 1200px; margin: 32px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .card h2 { font-size: 15px; font-weight: 700; color: #2d3748; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  label { display: block; font-size: 13px; color: #718096; margin-bottom: 4px; margin-top: 14px; }
+  input[type=number] { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 15px; background: #f7fafc; transition: border 0.2s; }
+  input[type=number]:focus { outline: none; border-color: #4299e1; background: white; }
+  .input-green { border-color: #48bb78 !important; background: #f0fff4 !important; }
+  .funil { margin-top: 8px; }
+  .funil-etapa { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: white; }
+  .f1 { background: #4299e1; } .f2 { background: #48bb78; } .f3 { background: #ed8936; }
+  .f4 { background: #e53e3e; } .f5 { background: #805ad5; }
+  .funil-etapa .value { font-size: 20px; }
+  .multiplicador { background: #ebf8ff; border-left: 4px solid #4299e1; border-radius: 8px; padding: 14px 18px; margin-top: 8px; }
+  .multiplicador .big { font-size: 28px; font-weight: 700; color: #2b6cb0; }
+  .multiplicador .sub { font-size: 13px; color: #4a5568; margin-top: 4px; }
+  .insight { background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; padding: 14px 18px; margin-top: 16px; font-size: 13px; color: #744210; line-height: 1.6; }
+  .alerta { background: #fff5f5; border-left: 4px solid #e53e3e; border-radius: 8px; padding: 12px 16px; margin-top: 16px; font-size: 13px; color: #742a2a; display: none; }
+  .taxas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .full-width { grid-column: 1 / -1; }
+
+  /* RITMO DIÁRIO */
+  .ritmo-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  .ritmo-table th { padding: 10px 12px; text-align: center; font-size: 12px; color: white; }
+  .ritmo-table th.th-label { background: #2d3748; text-align: left; border-radius: 6px 0 0 0; }
+  .ritmo-table th.th-total { background: #2b6cb0; }
+  .ritmo-table th.th-nec { background: #276749; }
+  .ritmo-table th.th-disp { background: #c05621; border-radius: 0 6px 0 0; }
+  .ritmo-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+  .ritmo-table td.td-label { font-weight: 500; color: #2d3748; }
+  .ritmo-table td.td-total { text-align: center; font-weight: 700; color: #2b6cb0; }
+  .ritmo-table td.td-nec { text-align: center; font-weight: 700; color: #276749; }
+  .ritmo-table td.td-disp { text-align: center; font-weight: 700; color: #c05621; }
+  .ritmo-table tr:last-child td { border-bottom: none; }
+
+  /* ANALISTAS */
+  .analistas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .input-block label { margin-top: 0; }
+  .resultado-grande { background: linear-gradient(135deg, #1a365d, #2b6cb0); border-radius: 12px; padding: 20px; text-align: center; color: white; grid-column: span 2; }
+  .resultado-grande .num { font-size: 52px; font-weight: 800; line-height: 1; }
+  .resultado-grande .sub { font-size: 13px; opacity: 0.8; margin-top: 6px; }
+
+  /* CAPACIDADE */
+  .cap-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 12px; }
+  .cap-item { background: #f7fafc; border-radius: 10px; padding: 14px; text-align: center; }
+  .cap-item .val { font-size: 24px; font-weight: 700; }
+  .cap-item .desc { font-size: 11px; color: #718096; margin-top: 4px; }
+  .status-box { grid-column: 1 / -1; border-radius: 10px; padding: 16px 20px; font-size: 14px; font-weight: 600; text-align: center; margin-top: 4px; }
+  .status-ok      { background: #f0fff4; color: #276749; border: 2px solid #48bb78; }
+  .status-mod     { background: #fffff0; color: #744210; border: 2px solid #ecc94b; }
+  .status-alto    { background: #fffaf0; color: #7b341e; border: 2px solid #ed8936; }
+  .status-critico { background: #fff5f5; color: #742a2a; border: 2px solid #fc8181; }
+
+  footer { text-align: center; color: #a0aec0; font-size: 12px; padding: 24px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">concentrix</div>
+  <h1>Calculadora do Funil de Recrutamento</h1>
+</header>
+<div class="container">
+
+  <!-- 1. META -->
+  <div class="card">
+    <h2>🎯 1. Insira sua Meta</h2>
+    <label>Meta de Admitidos</label>
+    <input class="input-green" type="number" id="meta" value="1076" min="1" oninput="calcular()">
+    <label>Dias Úteis Considerados</label>
+    <input class="input-green" type="number" id="dias" value="19" min="1" oninput="calcular()">
+    <div class="multiplicador" style="margin-top:16px;">
+      <div class="big" id="mult_val">—</div>
+      <div class="sub">candidatos abordados por cada admitido</div>
+    </div>
+    <div class="insight" id="insight_txt"></div>
+    <div class="alerta" id="alerta">⚠ <strong>Alerta de Capacidade:</strong> volume diário elevado de abordagens.</div>
+  </div>
+
+  <!-- 3. TAXAS -->
+  <div class="card">
+    <h2>⚙️ 3. Taxas de Conversão do Funil</h2>
+    <p style="font-size:12px;color:#718096;margin-bottom:8px;">Edite as taxas (%) para simular diferentes cenários.</p>
+    <div class="taxas-grid">
+      <div><label>Abordados → Agendados (%)</label><input class="input-green" type="number" id="t1" value="11.7" step="0.1" min="0.1" max="100" oninput="calcular()"></div>
+      <div><label>Agendados → Entrevistados (%)</label><input class="input-green" type="number" id="t2" value="72.1" step="0.1" min="0.1" max="100" oninput="calcular()"></div>
+      <div><label>Entrevistados → Aprovados (%)</label><input class="input-green" type="number" id="t3" value="61.7" step="0.1" min="0.1" max="100" oninput="calcular()"></div>
+      <div><label>Aprovados → Admitidos (%)</label><input class="input-green" type="number" id="t4" value="56.9" step="0.1" min="0.1" max="100" oninput="calcular()"></div>
+    </div>
+  </div>
+
+  <!-- 2. FUNIL -->
+  <div class="card">
+    <h2>📊 2. Volume Necessário por Etapa</h2>
+    <div class="funil">
+      <div class="funil-etapa f1"><span>ABORDADOS</span><span class="value" id="v_abord">—</span></div>
+      <div class="funil-etapa f2"><span>AGENDADOS</span><span class="value" id="v_agend">—</span></div>
+      <div class="funil-etapa f3"><span>ENTREVISTADOS</span><span class="value" id="v_entr">—</span></div>
+      <div class="funil-etapa f4"><span>APROVADOS</span><span class="value" id="v_aprov">—</span></div>
+      <div class="funil-etapa f5"><span>ADMITIDOS (META)</span><span class="value" id="v_adm">—</span></div>
+    </div>
+  </div>
+
+  <!-- 4. RITMO DIÁRIO -->
+  <div class="card">
+    <h2>📅 4. Ritmo Diário Necessário</h2>
+    <table class="ritmo-table">
+      <thead>
+        <tr>
+          <th class="th-label">Etapa</th>
+          <th class="th-total">Total/dia</th>
+          <th class="th-nec">Por analista<br><small>(Necessário)</small></th>
+          <th class="th-disp">Por analista<br><small>(Disponível)</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-label">Aprovações</td><td class="td-total" id="rt_aprov">—</td><td class="td-nec" id="rn_aprov">—</td><td class="td-disp" id="rd_aprov">—</td></tr>
+        <tr><td class="td-label">Entrevistas</td><td class="td-total" id="rt_entr">—</td><td class="td-nec" id="rn_entr">—</td><td class="td-disp" id="rd_entr">—</td></tr>
+        <tr><td class="td-label">Agendamentos</td><td class="td-total" id="rt_agend">—</td><td class="td-nec" id="rn_agend">—</td><td class="td-disp" id="rd_agend">—</td></tr>
+        <tr><td class="td-label">Abordagens</td><td class="td-total" id="rt_abord">—</td><td class="td-nec" id="rn_abord">—</td><td class="td-disp" id="rd_abord">—</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#a0aec0;margin-top:12px;">ⓘ <strong style="color:#276749">Verde</strong> = carga ideal (analistas necessários) · <strong style="color:#c05621">Laranja</strong> = carga real (analistas disponíveis)</p>
+  </div>
+
+  <!-- 5. ANALISTAS -->
+  <div class="card full-width">
+    <h2>👥 5. Dimensionamento de Analistas</h2>
+    <div class="analistas-grid">
+      <div class="input-block">
+        <label>Média de aprovações por analista (por dia)</label>
+        <input class="input-green" type="number" id="media_analista" value="2" min="1" oninput="calcular()" style="font-size:18px;">
+      </div>
+      <div class="input-block">
+        <label>Analistas disponíveis</label>
+        <input class="input-green" type="number" id="analistas_disp" value="25" min="0" oninput="calcular()" style="font-size:18px;">
+      </div>
+      <div class="resultado-grande">
+        <div class="num" id="res_necessarios">—</div>
+        <div class="sub">analistas necessários para atingir a meta</div>
+      </div>
+    </div>
+
+    <!-- 6. CAPACIDADE -->
+    <h2 style="margin-top:24px;">📋 6. Análise de Capacidade</h2>
+    <div class="cap-grid">
+      <div class="cap-item">
+        <div class="val" id="cap_cobertura" style="color:#2b6cb0">—</div>
+        <div class="desc">Cobertura atual</div>
+      </div>
+      <div class="cap-item">
+        <div class="val" id="cap_gap" style="color:#e53e3e">—</div>
+        <div class="desc">Gap de capacidade</div>
+      </div>
+      <div class="cap-item">
+        <div class="val" id="cap_absoluto" style="color:#718096">—</div>
+        <div class="desc">Diferença (disponíveis − necessários)</div>
+      </div>
+      <div class="status-box status-mod" id="status_box">—</div>
+    </div>
+  </div>
+
+</div>
+<footer>ⓘ Os cálculos são baseados nas taxas de conversão e nos dias úteis informados. Atualize os campos em verde para simular novos cenários. · Concentrix</footer>
+
+<script>
+function fmt(n)    { return Math.round(n).toLocaleString('pt-BR'); }
+function fmtD(n,d) { return (+n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function pct(n)    { return fmtD(n*100,1) + '%'; }
+
+function calcular() {
+  const meta  = parseFloat(document.getElementById('meta').value)  || 0;
+  const dias  = parseFloat(document.getElementById('dias').value)  || 1;
+  const t1    = (parseFloat(document.getElementById('t1').value)   || 0) / 100;
+  const t2    = (parseFloat(document.getElementById('t2').value)   || 0) / 100;
+  const t3    = (parseFloat(document.getElementById('t3').value)   || 0) / 100;
+  const t4    = (parseFloat(document.getElementById('t4').value)   || 0) / 100;
+  const media = parseFloat(document.getElementById('media_analista').value) || 0;
+  const disp  = parseFloat(document.getElementById('analistas_disp').value) || 0;
+
+  if (!t1||!t2||!t3||!t4) return;
+
+  const aprovados  = meta / t4;
+  const entrev     = aprovados / t3;
+  const agendados  = entrev / t2;
+  const abordados  = agendados / t1;
+  const mult       = abordados / meta;
+
+  // Funil
+  document.getElementById('v_abord').textContent = fmt(abordados);
+  document.getElementById('v_agend').textContent = fmt(agendados);
+  document.getElementById('v_entr').textContent  = fmt(entrev);
+  document.getElementById('v_aprov').textContent = fmt(aprovados);
+  document.getElementById('v_adm').textContent   = fmt(meta);
+
+  document.getElementById('mult_val').textContent = fmtD(mult,2);
+  document.getElementById('insight_txt').innerHTML =
+    `💡 <strong>Insight Executivo:</strong> Para atingir <strong>${fmt(meta)}</strong> admissões, será necessário abordar aproximadamente <strong>${fmt(abordados)}</strong> candidatos. O maior esforço está concentrado no topo do funil.`;
+  document.getElementById('alerta').style.display = (abordados/dias > 1000) ? 'block' : 'none';
+
+  // Analistas
+  const nec = media > 0 ? Math.ceil((aprovados/dias)/media) : 0;
+  document.getElementById('res_necessarios').textContent = nec > 0 ? fmt(nec) : '—';
+
+  // Ritmo diário — totais
+  const rtAprov = aprovados/dias, rtEntr = entrev/dias, rtAgend = agendados/dias, rtAbord = abordados/dias;
+  document.getElementById('rt_aprov').textContent = fmt(rtAprov);
+  document.getElementById('rt_entr').textContent  = fmt(rtEntr);
+  document.getElementById('rt_agend').textContent = fmt(rtAgend);
+  document.getElementById('rt_abord').textContent = fmt(rtAbord);
+
+  // Ritmo por analista — Necessário (baseado em nec)
+  if (nec > 0) {
+    document.getElementById('rn_aprov').textContent = fmtD(rtAprov/nec,1);
+    document.getElementById('rn_entr').textContent  = fmtD(rtEntr/nec,1);
+    document.getElementById('rn_agend').textContent = fmtD(rtAgend/nec,1);
+    document.getElementById('rn_abord').textContent = fmtD(rtAbord/nec,1);
+  }
+
+  // Ritmo por analista — Disponível (baseado em disp)
+  if (disp > 0) {
+    document.getElementById('rd_aprov').textContent = fmtD(rtAprov/disp,1);
+    document.getElementById('rd_entr').textContent  = fmtD(rtEntr/disp,1);
+    document.getElementById('rd_agend').textContent = fmtD(rtAgend/disp,1);
+    document.getElementById('rd_abord').textContent = fmtD(rtAbord/disp,1);
+  }
+
+  // Capacidade
+  if (nec > 0) {
+    const cobertura = disp / nec;
+    const gap       = 1 - cobertura;
+    const absoluto  = disp - nec;
+    document.getElementById('cap_cobertura').textContent = pct(cobertura);
+    document.getElementById('cap_gap').textContent       = pct(gap < 0 ? 0 : gap);
+    document.getElementById('cap_absoluto').textContent  = (absoluto >= 0 ? '+' : '') + fmt(absoluto);
+
+    const box = document.getElementById('status_box');
+    box.className = 'status-box';
+    if (cobertura >= 1) {
+      box.classList.add('status-ok');
+      box.textContent = '✅ Capacidade suficiente — meta dentro do alcance com os analistas disponíveis.';
+    } else if (cobertura >= 0.85) {
+      box.classList.add('status-mod');
+      box.textContent = '⚠️ Risco moderado de entrega — considere reforço pontual ou redistribuição de carga.';
+    } else if (cobertura >= 0.70) {
+      box.classList.add('status-alto');
+      box.textContent = '🔶 Risco alto — acione reforço imediato. Capacidade atual pode comprometer a entrega.';
+    } else {
+      box.classList.add('status-critico');
+      box.textContent = '🔴 Risco crítico — meta comprometida. É necessário aumentar o time urgentemente.';
+    }
+  }
+}
+calcular();
+</script>
+</body>
+</html>
