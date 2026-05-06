@@ -192,10 +192,7 @@ function calcular() {
   document.getElementById('v_aprov').textContent=fmt(aprovados);
   document.getElementById('v_adm').textContent  =fmt(meta);
   document.getElementById('mult_val').textContent=fmtD(mult,2);
-  document.getElementById('insight_txt').innerHTML=
-    `💡 <strong>Insight:</strong> Para atingir <strong>${fmt(meta)}</strong> admissões, será necessário abordar <strong>${fmt(abordados)}</strong> candidatos.`;
-  document.getElementById('alerta').style.display=(abordados/dias>1000)?'block':'none';
-
+ 
   const nec=media>0?Math.ceil((aprovados/dias)/media):0;
   document.getElementById('res_necessarios').textContent=nec>0?fmt(nec):'—';
 
